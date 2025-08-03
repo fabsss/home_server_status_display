@@ -128,7 +128,7 @@ def display_status():
 
             # Uptime
             uptime_str = get_uptime()
-            uptime_width = draw.textsize(uptime_str, font=font_small)[0]
+            uptime_width = font_small.getsize(uptime_str)[0]
             draw.text((x_offset + 0, y_offset + 0), "Uptime:", font=font_small, fill="white")
             draw.text((x_offset + display.width - uptime_width, y_offset + 0), uptime_str, font=font_small, fill="white")
 
@@ -136,7 +136,7 @@ def display_status():
             temp_str = get_cpu_temperature()
             temp_val = float(temp_str.replace("°C", ""))
             temp_color = get_temp_color(temp_val)
-            temp_width = draw.textsize(temp_str, font=font_small)[0]
+            temp_width = font_small.getsize(temp_str)[0]
             draw.text((x_offset + 0, y_offset + 20), "CPU Temp:", font=font_small, fill="white")
             draw.text((x_offset + display.width - temp_width, y_offset + 20), temp_str, font=font_small, fill=temp_color)
 
@@ -144,7 +144,7 @@ def display_status():
             cpu = psutil.cpu_percent()
             cpu_color = get_usage_color(cpu)
             cpu_str = f"{cpu}%"
-            cpu_width = draw.textsize(cpu_str, font=font_small)[0]
+            cpu_width = font_small.getsize(cpu_str)[0]
             draw.text((x_offset + 0, y_offset + 40), "CPU:", font=font_small, fill="white")
             draw.text((x_offset + display.width - cpu_width, y_offset + 40), cpu_str, font=font_small, fill=cpu_color)
 
@@ -154,15 +154,15 @@ def display_status():
             ram_color = get_usage_color(ram.percent)
             swap_color = get_usage_color(swap.percent)
             ram_swap_str = f"{ram.percent}% / {swap.percent}%"
-            ram_swap_width = draw.textsize(ram_swap_str, font=font_small)[0]
+            ram_swap_width = font_small.getsize(ram_swap_str)[0]
             draw.text((x_offset + 0, y_offset + 60), "RAM:", font=font_small, fill="white")
             # Draw RAM value in color, slash in white, swap value in color
             ram_str = f"{ram.percent}%"
             swap_str = f"{swap.percent}%"
             slash_str = " / "
-            ram_width = draw.textsize(ram_str, font=font_small)[0]
-            slash_width = draw.textsize(slash_str, font=font_small)[0]
-            swap_width = draw.textsize(swap_str, font=font_small)[0]
+            ram_width = font_small.getsize(ram_str)[0]
+            slash_width = font_small.getsize(slash_str)[0]
+            swap_width = font_small.getsize(swap_str)[0]
             right_x = x_offset + display.width
             draw.text((right_x - ram_width - slash_width - swap_width, y_offset + 60), ram_str, font=font_small, fill=ram_color)
             draw.text((right_x - slash_width - swap_width, y_offset + 60), slash_str, font=font_small, fill="white")
@@ -172,7 +172,7 @@ def display_status():
             disk = psutil.disk_usage("/")
             disk_color = get_usage_color(disk.percent)
             disk_str = f"{disk.percent}%"
-            disk_width = draw.textsize(disk_str, font=font_small)[0]
+            disk_width = font_small.getsize(disk_str)[0]
             draw.text((x_offset + 0, y_offset + 80), "Disk:", font=font_small, fill="white")
             draw.text((x_offset + display.width - disk_width, y_offset + 80), disk_str, font=font_small, fill=disk_color)
 
@@ -184,18 +184,18 @@ def display_status():
             ha_str = "Hass"
             sup_str = "Sup"
             status_str = f"{ha_str}: {ha_status} / {sup_str}: {supervisor_status}"
-            status_width = draw.textsize(status_str, font=font_small)[0]
+            status_width = font_small.getsize(status_str)[0]
             draw.text((x_offset + 0, y_offset + 95), "Container:", font=font_small, fill="white")
             # Draw right-aligned status string, color names
             right_x = x_offset + display.width
             # Calculate positions for colored names and values
             ha_name = f"{ha_str}: "
-            ha_name_width = draw.textsize(ha_name, font=font_small)[0]
-            ha_status_width = draw.textsize(ha_status, font=font_small)[0]
-            slash_width = draw.textsize(" / ", font=font_small)[0]
+            ha_name_width = font_small.getsize(ha_name)[0]
+            ha_status_width = font_small.getsize(ha_status)[0]
+            slash_width = font_small.getsize(" / ")[0]
             sup_name = f"{sup_str}: "
-            sup_name_width = draw.textsize(sup_name, font=font_small)[0]
-            sup_status_width = draw.textsize(supervisor_status, font=font_small)[0]
+            sup_name_width = font_small.getsize(sup_name)[0]
+            sup_status_width = font_small.getsize(supervisor_status)[0]
             x_pos = right_x - (ha_name_width + ha_status_width + slash_width + sup_name_width + sup_status_width)
             draw.text((x_pos, y_offset + 95), ha_name, font=font_small, fill=ha_color)
             x_pos += ha_name_width
