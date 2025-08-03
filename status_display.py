@@ -213,7 +213,7 @@ def display_status():
             draw.text((x_offset + 100, y_offset + 95), "Sup", font=font_small, fill=sup_color)
 
             # Animation
-            draw_animation(draw, x_offset + display.width - 10, y_offset)
+            draw_animation(draw, x_offset + 110 + animation_frame, y_offset + 110)
 
             # Ping to www.google.com (bottom line)
             ping_result = get_ping()
