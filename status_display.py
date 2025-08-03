@@ -159,21 +159,29 @@ def display_status():
             draw.text((x_offset + 0, y_offset + 0), "Uptime:", font=font_small, fill="white")
             draw.text((x_offset + display.width - uptime_width-1, y_offset + 0), uptime_str, font=font_small, fill="white")
 
-            # CPU Temperature
+            # CPU Usage + Temperature
             temp_str = get_cpu_temperature()
             temp_val = float(temp_str.replace("°C", ""))
-            temp_color = get_temp_color(temp_val)
-            temp_width = get_text_width(temp_str, font_small)
-            draw.text((x_offset + 0, y_offset + 20), "CPU Temp:", font=font_small, fill="white")
-            draw.text((x_offset + display.width - temp_width-1, y_offset + 20), temp_str, font=font_small, fill=temp_color)
-
-            # CPU Usage
             cpu = psutil.cpu_percent()
             cpu_color = get_usage_color(cpu)
             cpu_str = f"{cpu}%"
             cpu_width = get_text_width(cpu_str, font_small)
-            draw.text((x_offset + 0, y_offset + 40), "CPU:", font=font_small, fill="white")
-            draw.text((x_offset + display.width - cpu_width-1, y_offset + 40), cpu_str, font=font_small, fill=cpu_color)
+            temp_color = get_temp_color(temp_val)
+            temp_width = get_text_width(temp_str, font_small)
+            right_x = x_offset + display.width-1 # Needed for CPU and RAM lines
+            slash_str = " / " # Needed for CPU and RAM lines
+            slash_width = get_text_width(slash_str, font_small) # Needed for CPU and RAM lines
+
+            draw.text((x_offset + 0, y_offset + 20), "CPU:", font=font_small, fill="white")
+            #draw.text((x_offset + display.width - cpu_width-1, y_offset + 40), cpu_str, font=font_small, fill=cpu_color)
+
+            #draw.text((x_offset + 0, y_offset + 20), "/", font=font_small, fill="white")
+            #draw.text((x_offset + display.width - temp_width-1, y_offset + 20), temp_str, font=font_small, fill=temp_color)
+
+            draw.text((right_x - cpu_width - slash_width - temp_width, y_offset + 20), cpu_str, font=font_small, fill=cpu_color)
+            draw.text((right_x - slash_width - temp_width, y_offset + 20), slash_str, font=font_small, fill="white")
+            draw.text((right_x - temp_width, y_offset + 20), temp_str, font=font_small, fill=temp_color)
+
 
             # RAM and Swap Usage (combined line, right aligned)
             ram = psutil.virtual_memory()
@@ -182,42 +190,41 @@ def display_status():
             swap_color = get_usage_color(swap.percent)
             ram_swap_str = f"{ram.percent}% / {swap.percent}%"
             ram_swap_width = get_text_width(ram_swap_str, font_small)
-            draw.text((x_offset + 0, y_offset + 60), "RAM:", font=font_small, fill="white")
+            draw.text((x_offset + 0, y_offset + 40), "RAM:", font=font_small, fill="white")
             ram_str = f"{ram.percent}%"
             swap_str = f"{swap.percent}%"
-            slash_str = " / "
+            
             ram_width = get_text_width(ram_str, font_small)
-            slash_width = get_text_width(slash_str, font_small)
             swap_width = get_text_width(swap_str, font_small)
-            right_x = x_offset + display.width-1
-            draw.text((right_x - ram_width - slash_width - swap_width, y_offset + 60), ram_str, font=font_small, fill=ram_color)
-            draw.text((right_x - slash_width - swap_width, y_offset + 60), slash_str, font=font_small, fill="white")
-            draw.text((right_x - swap_width, y_offset + 60), swap_str, font=font_small, fill=swap_color)
+
+            draw.text((right_x - ram_width - slash_width - swap_width, y_offset + 40), ram_str, font=font_small, fill=ram_color)
+            draw.text((right_x - slash_width - swap_width, y_offset + 40), slash_str, font=font_small, fill="white")
+            draw.text((right_x - swap_width, y_offset + 40), swap_str, font=font_small, fill=swap_color)
 
             # Disk Usage
             disk = psutil.disk_usage("/")
             disk_color = get_usage_color(disk.percent)
             disk_str = f"{disk.percent}%"
             disk_width = get_text_width(disk_str, font_small)
-            draw.text((x_offset + 0, y_offset + 78), "Disk:", font=font_small, fill="white")
-            draw.text((x_offset + display.width - disk_width-1, y_offset + 80), disk_str, font=font_small, fill=disk_color)
+            draw.text((x_offset + 0, y_offset + 60), "Disk:", font=font_small, fill="white")
+            draw.text((x_offset + display.width - disk_width-1, y_offset + 60), disk_str, font=font_small, fill=disk_color)
 
             # Docker Status - Home Assistant and Supervisor (right aligned)
             ha_status = get_docker_status("homeassistant")
             supervisor_status = get_docker_status("hassio_supervisor")
             ha_color = get_status_color(ha_status)
             sup_color = get_status_color(supervisor_status)
-            draw.text((x_offset + 0, y_offset + 95), "Container:", font=font_small, fill="white")
-            draw.text((x_offset + 65, y_offset + 95), "Hass", font=font_small, fill=ha_color)
-            draw.text((x_offset + 95, y_offset + 95), "/", font=font_small, fill="white")
-            draw.text((x_offset + 100, y_offset + 95), "Sup", font=font_small, fill=sup_color)
+            draw.text((x_offset + 0, y_offset + 80), "Container:", font=font_small, fill="white")
+            draw.text((x_offset + 65, y_offset + 80), "Hass", font=font_small, fill=ha_color)
+            draw.text((x_offset + 95, y_offset + 80), "/", font=font_small, fill="white")
+            draw.text((x_offset + 100, y_offset + 80), "Sup", font=font_small, fill=sup_color)
 
             # Animation
             draw_animation(draw, x_offset + 110 + animation_frame, y_offset + 110)
 
             # Ping to www.google.com (bottom line)
             ping_result = get_ping()
-            draw.text((x_offset + 0, y_offset + 110), f"Ping: {ping_result}", font=font_small, fill="white")
+            draw.text((x_offset + 0, y_offset + 100), f"Ping: {ping_result}", font=font_small, fill="white")
 
         time.sleep(1)
 
