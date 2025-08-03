@@ -156,7 +156,6 @@ def display_status():
             ram_swap_str = f"{ram.percent}% / {swap.percent}%"
             ram_swap_width = font_small.getsize(ram_swap_str)[0]
             draw.text((x_offset + 0, y_offset + 60), "RAM:", font=font_small, fill="white")
-            # Draw RAM value in color, slash in white, swap value in color
             ram_str = f"{ram.percent}%"
             swap_str = f"{swap.percent}%"
             slash_str = " / "
@@ -186,9 +185,7 @@ def display_status():
             status_str = f"{ha_str}: {ha_status} / {sup_str}: {supervisor_status}"
             status_width = font_small.getsize(status_str)[0]
             draw.text((x_offset + 0, y_offset + 95), "Container:", font=font_small, fill="white")
-            # Draw right-aligned status string, color names
             right_x = x_offset + display.width
-            # Calculate positions for colored names and values
             ha_name = f"{ha_str}: "
             ha_name_width = font_small.getsize(ha_name)[0]
             ha_status_width = font_small.getsize(ha_status)[0]
