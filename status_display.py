@@ -219,7 +219,7 @@ def display_status():
             ping_result = get_ping()
             draw.text((x_offset + 0, y_offset + 110), f"Ping: {ping_result}", font=font_small, fill="white")
 
-        time.sleep(1)
+        time.sleep(5)
 
 if __name__ == "__main__":
     display_status()
