@@ -7,7 +7,6 @@ from luma.oled.device import ssd1351
 from luma.core.render import canvas
 from PIL import ImageFont
 import random
-import subprocess
 
 # Initialize Docker client
 docker_client = docker.from_env()
@@ -116,24 +115,6 @@ def update_shift():
             if shift_y < -4:
                 shift_direction = 1
 
-def get_ping(host="www.google.com"):
-    """Return ping time to host in ms, or 'timeout' if unreachable."""
-    try:
-        # Use the system ping command, send 1 packet, wait max 1 second
-        output = subprocess.check_output(
-            ["ping", "-c", "1", "-W", "1", host],
-            stderr=subprocess.STDOUT,
-            universal_newlines=True
-        )
-        # Parse output for time=XX ms
-        for line in output.splitlines():
-            if "time=" in line:
-                time_ms = line.split("time=")[-1].split(" ")[0]
-                return f"{time_ms} ms"
-        return "timeout"
-    except Exception:
-        return "timeout"
-
 def display_status():
     """Update the display with system status."""
     global animation_frame, shift_x, shift_y
@@ -146,53 +127,88 @@ def display_status():
             x_offset = shift_x
 
             # Uptime
-            draw.text((x_offset + 0, y_offset + 0), f"Uptime: {get_uptime()}", font=font_small, fill="white")
+            uptime_str = get_uptime()
+            uptime_width = draw.textsize(uptime_str, font=font_small)[0]
+            draw.text((x_offset + 0, y_offset + 0), "Uptime:", font=font_small, fill="white")
+            draw.text((x_offset + display.width - uptime_width, y_offset + 0), uptime_str, font=font_small, fill="white")
 
             # CPU Temperature
             temp_str = get_cpu_temperature()
             temp_val = float(temp_str.replace("°C", ""))
             temp_color = get_temp_color(temp_val)
-            draw.text((x_offset + 0, y_offset + 20), "CPU Temp: ", font=font_small, fill="white")
-            draw.text((x_offset + 80, y_offset + 20), f"{temp_str}", font=font_small, fill=temp_color)
+            temp_width = draw.textsize(temp_str, font=font_small)[0]
+            draw.text((x_offset + 0, y_offset + 20), "CPU Temp:", font=font_small, fill="white")
+            draw.text((x_offset + display.width - temp_width, y_offset + 20), temp_str, font=font_small, fill=temp_color)
 
             # CPU Usage
             cpu = psutil.cpu_percent()
             cpu_color = get_usage_color(cpu)
-            draw.text((x_offset + 0, y_offset + 40), "CPU: ", font=font_small, fill="white")
-            draw.text((x_offset + 40, y_offset + 40), f"{cpu}%", font=font_small, fill=cpu_color)
+            cpu_str = f"{cpu}%"
+            cpu_width = draw.textsize(cpu_str, font=font_small)[0]
+            draw.text((x_offset + 0, y_offset + 40), "CPU:", font=font_small, fill="white")
+            draw.text((x_offset + display.width - cpu_width, y_offset + 40), cpu_str, font=font_small, fill=cpu_color)
 
-            # RAM and Swap Usage (combined line)
+            # RAM and Swap Usage (combined line, right aligned)
             ram = psutil.virtual_memory()
             swap = psutil.swap_memory()
             ram_color = get_usage_color(ram.percent)
             swap_color = get_usage_color(swap.percent)
-            draw.text((x_offset + 0, y_offset + 60), "RAM: ", font=font_small, fill="white")
-            draw.text((x_offset + 40, y_offset + 60), f"{ram.percent}%", font=font_small, fill=ram_color)
-            draw.text((x_offset + 80, y_offset + 60), "/", font=font_small, fill="white")
-            draw.text((x_offset + 87, y_offset + 60), f"{swap.percent}%", font=font_small, fill=swap_color)
+            ram_swap_str = f"{ram.percent}% / {swap.percent}%"
+            ram_swap_width = draw.textsize(ram_swap_str, font=font_small)[0]
+            draw.text((x_offset + 0, y_offset + 60), "RAM:", font=font_small, fill="white")
+            # Draw RAM value in color, slash in white, swap value in color
+            ram_str = f"{ram.percent}%"
+            swap_str = f"{swap.percent}%"
+            slash_str = " / "
+            ram_width = draw.textsize(ram_str, font=font_small)[0]
+            slash_width = draw.textsize(slash_str, font=font_small)[0]
+            swap_width = draw.textsize(swap_str, font=font_small)[0]
+            right_x = x_offset + display.width
+            draw.text((right_x - ram_width - slash_width - swap_width, y_offset + 60), ram_str, font=font_small, fill=ram_color)
+            draw.text((right_x - slash_width - swap_width, y_offset + 60), slash_str, font=font_small, fill="white")
+            draw.text((right_x - swap_width, y_offset + 60), swap_str, font=font_small, fill=swap_color)
 
             # Disk Usage
             disk = psutil.disk_usage("/")
             disk_color = get_usage_color(disk.percent)
-            draw.text((x_offset + 0, y_offset + 80), "Disk: ", font=font_small, fill="white")
-            draw.text((x_offset + 40, y_offset + 80), f"{disk.percent}%", font=font_small, fill=disk_color)
+            disk_str = f"{disk.percent}%"
+            disk_width = draw.textsize(disk_str, font=font_small)[0]
+            draw.text((x_offset + 0, y_offset + 80), "Disk:", font=font_small, fill="white")
+            draw.text((x_offset + display.width - disk_width, y_offset + 80), disk_str, font=font_small, fill=disk_color)
 
-            # Docker Status - Home Assistant and Supervisor (1 line, color coded)
+            # Docker Status - Home Assistant and Supervisor (right aligned)
             ha_status = get_docker_status("homeassistant")
             supervisor_status = get_docker_status("hassio_supervisor")
             ha_color = get_status_color(ha_status)
             sup_color = get_status_color(supervisor_status)
+            ha_str = "Hass"
+            sup_str = "Sup"
+            status_str = f"{ha_str}: {ha_status} / {sup_str}: {supervisor_status}"
+            status_width = draw.textsize(status_str, font=font_small)[0]
             draw.text((x_offset + 0, y_offset + 95), "Container:", font=font_small, fill="white")
-            draw.text((x_offset + 65, y_offset + 95), "Hass", font=font_small, fill=ha_color)
-            draw.text((x_offset + 95, y_offset + 95), "/", font=font_small, fill="white")
-            draw.text((x_offset + 100, y_offset + 95), "Sup", font=font_small, fill=sup_color)
+            # Draw right-aligned status string, color names
+            right_x = x_offset + display.width
+            # Calculate positions for colored names and values
+            ha_name = f"{ha_str}: "
+            ha_name_width = draw.textsize(ha_name, font=font_small)[0]
+            ha_status_width = draw.textsize(ha_status, font=font_small)[0]
+            slash_width = draw.textsize(" / ", font=font_small)[0]
+            sup_name = f"{sup_str}: "
+            sup_name_width = draw.textsize(sup_name, font=font_small)[0]
+            sup_status_width = draw.textsize(supervisor_status, font=font_small)[0]
+            x_pos = right_x - (ha_name_width + ha_status_width + slash_width + sup_name_width + sup_status_width)
+            draw.text((x_pos, y_offset + 95), ha_name, font=font_small, fill=ha_color)
+            x_pos += ha_name_width
+            draw.text((x_pos, y_offset + 95), ha_status, font=font_small, fill="white")
+            x_pos += ha_status_width
+            draw.text((x_pos, y_offset + 95), " / ", font=font_small, fill="white")
+            x_pos += slash_width
+            draw.text((x_pos, y_offset + 95), sup_name, font=font_small, fill=sup_color)
+            x_pos += sup_name_width
+            draw.text((x_pos, y_offset + 95), supervisor_status, font=font_small, fill="white")
 
-            # Animation (move to top right)
+            # Animation
             draw_animation(draw, x_offset + display.width - 10, y_offset)
-
-            # Ping to www.google.com (bottom line)
-            ping_result = get_ping()
-            draw.text((x_offset + 0, y_offset + 110), f"Ping: {ping_result}", font=font_small, fill="white")
 
         time.sleep(1)
 
