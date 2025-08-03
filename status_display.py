@@ -40,6 +40,15 @@ def get_docker_status(container_name):
     except docker.errors.NotFound:
         return "Not Found"
 
+def get_status_color(status):
+    """Return color based on container status."""
+    if status == "running":
+        return "green"
+    elif status == "exited" or status == "stopped":
+        return "red"
+    else:
+        return "yellow"
+
 def draw_animation(draw, x, y):
     """Draw a small animation to indicate the script is running."""
     global animation_frame
@@ -65,19 +74,20 @@ def display_status():
             # RAM and Swap Usage (combined line)
             ram = psutil.virtual_memory()
             swap = psutil.swap_memory()
-            draw.text((0, y_offset + 40), f"RAM: {ram.percent}%  SWAP: {swap.percent}%", font=font_small, fill="white")
+            draw.text((0, y_offset + 40), f"RAM: {ram.percent}%  / {swap.percent}%", font=font_small, fill="white")
 
             # CPU Usage
             cpu = psutil.cpu_percent()
             draw.text((0, y_offset + 60), f"CPU: {cpu}%", font=font_small, fill="white")
 
-            # Docker Status - Home Assistant
+            # Docker Status - Home Assistant and Supervisor (1 line, color coded)
             ha_status = get_docker_status("homeassistant")
-            draw.text((0, y_offset + 80), f"HA: {ha_status}", font=font_small, fill="white")
-
-            # Docker Status - Supervisor
             supervisor_status = get_docker_status("hassio_supervisor")
-            draw.text((0, y_offset + 95), f"SUP: {supervisor_status}", font=font_small, fill="white")
+            ha_color = get_status_color(ha_status)
+            sup_color = get_status_color(supervisor_status)
+            # Show service name in color, status in white
+            draw.text((0, y_offset + 80), "Hass", font=font_small, fill=ha_color)
+            draw.text((90, y_offset + 80), "supervisor:", font=font_small, fill=sup_color)
 
             # Animation
             draw_animation(draw, 110 + animation_frame, y_offset + 110)
