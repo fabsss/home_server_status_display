@@ -207,10 +207,10 @@ def display_status():
             supervisor_status = get_docker_status("hassio_supervisor")
             ha_color = get_status_color(ha_status)
             sup_color = get_status_color(supervisor_status)
-            draw.text((x_offset + 0, y_offset + 92), "Container:", font=font_small, fill="white")
-            draw.text((x_offset + 65, y_offset + 92), "Hass", font=font_small, fill=ha_color)
-            draw.text((x_offset + 95, y_offset + 92), "/", font=font_small, fill="white")
-            draw.text((x_offset + 100, y_offset + 92), "Sup", font=font_small, fill=sup_color)
+            draw.text((x_offset + 0, y_offset + 95), "Container:", font=font_small, fill="white")
+            draw.text((x_offset + 65, y_offset + 95), "Hass", font=font_small, fill=ha_color)
+            draw.text((x_offset + 95, y_offset + 95), "/", font=font_small, fill="white")
+            draw.text((x_offset + 100, y_offset + 95), "Sup", font=font_small, fill=sup_color)
 
             # Animation
             draw_animation(draw, x_offset + 110 + animation_frame, y_offset + 110)
