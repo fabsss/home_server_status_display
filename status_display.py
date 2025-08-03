@@ -86,8 +86,10 @@ def display_status():
             ha_color = get_status_color(ha_status)
             sup_color = get_status_color(supervisor_status)
             # Show service name in color, status in white
-            draw.text((0, y_offset + 80), "Hass", font=font_small, fill=ha_color)
-            draw.text((90, y_offset + 80), "supervisor:", font=font_small, fill=sup_color)
+            draw.text((0, y_offset + 40), "Container:", font=font_small, fill="white")
+            draw.text((20, y_offset + 80), "Hass", font=font_small, fill=ha_color)
+            draw.text((45, y_offset + 80), "/", font=font_small, fill="white")
+            draw.text((50, y_offset + 80), "supervisor", font=font_small, fill=sup_color)
 
             # Animation
             draw_animation(draw, 110 + animation_frame, y_offset + 110)
