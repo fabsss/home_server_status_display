@@ -15,8 +15,9 @@ serial = spi(port=0, device=0)
 display = ssd1351(serial)
 
 # Load fonts
-font_large = ImageFont.truetype("arial.ttf", 16)
-font_small = ImageFont.truetype("arial.ttf", 12)
+font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+font_large = ImageFont.truetype(font_path, 16)
+font_small = ImageFont.truetype(font_path, 12)
 
 # Animation state
 animation_frame = 0
