@@ -157,7 +157,7 @@ def display_status():
             uptime_str = get_uptime()
             uptime_width = get_text_width(uptime_str, font_small)
             draw.text((x_offset + 0, y_offset + 0), "Uptime:", font=font_small, fill="white")
-            draw.text((x_offset + display.width - uptime_width, y_offset + 0), uptime_str, font=font_small, fill="white")
+            draw.text((x_offset + display.width - uptime_width-1, y_offset + 0), uptime_str, font=font_small, fill="white")
 
             # CPU Temperature
             temp_str = get_cpu_temperature()
@@ -165,7 +165,7 @@ def display_status():
             temp_color = get_temp_color(temp_val)
             temp_width = get_text_width(temp_str, font_small)
             draw.text((x_offset + 0, y_offset + 20), "CPU Temp:", font=font_small, fill="white")
-            draw.text((x_offset + display.width - temp_width, y_offset + 20), temp_str, font=font_small, fill=temp_color)
+            draw.text((x_offset + display.width - temp_width-1, y_offset + 20), temp_str, font=font_small, fill=temp_color)
 
             # CPU Usage
             cpu = psutil.cpu_percent()
@@ -173,7 +173,7 @@ def display_status():
             cpu_str = f"{cpu}%"
             cpu_width = get_text_width(cpu_str, font_small)
             draw.text((x_offset + 0, y_offset + 40), "CPU:", font=font_small, fill="white")
-            draw.text((x_offset + display.width - cpu_width, y_offset + 40), cpu_str, font=font_small, fill=cpu_color)
+            draw.text((x_offset + display.width - cpu_width-1, y_offset + 40), cpu_str, font=font_small, fill=cpu_color)
 
             # RAM and Swap Usage (combined line, right aligned)
             ram = psutil.virtual_memory()
@@ -189,7 +189,7 @@ def display_status():
             ram_width = get_text_width(ram_str, font_small)
             slash_width = get_text_width(slash_str, font_small)
             swap_width = get_text_width(swap_str, font_small)
-            right_x = x_offset + display.width
+            right_x = x_offset + display.width-1
             draw.text((right_x - ram_width - slash_width - swap_width, y_offset + 60), ram_str, font=font_small, fill=ram_color)
             draw.text((right_x - slash_width - swap_width, y_offset + 60), slash_str, font=font_small, fill="white")
             draw.text((right_x - swap_width, y_offset + 60), swap_str, font=font_small, fill=swap_color)
@@ -199,18 +199,18 @@ def display_status():
             disk_color = get_usage_color(disk.percent)
             disk_str = f"{disk.percent}%"
             disk_width = get_text_width(disk_str, font_small)
-            draw.text((x_offset + 0, y_offset + 80), "Disk:", font=font_small, fill="white")
-            draw.text((x_offset + display.width - disk_width, y_offset + 80), disk_str, font=font_small, fill=disk_color)
+            draw.text((x_offset + 0, y_offset + 78), "Disk:", font=font_small, fill="white")
+            draw.text((x_offset + display.width - disk_width-1, y_offset + 80), disk_str, font=font_small, fill=disk_color)
 
             # Docker Status - Home Assistant and Supervisor (right aligned)
             ha_status = get_docker_status("homeassistant")
             supervisor_status = get_docker_status("hassio_supervisor")
             ha_color = get_status_color(ha_status)
             sup_color = get_status_color(supervisor_status)
-            draw.text((x_offset + 0, y_offset + 95), "Container:", font=font_small, fill="white")
-            draw.text((x_offset + 65, y_offset + 95), "Hass", font=font_small, fill=ha_color)
-            draw.text((x_offset + 95, y_offset + 95), "/", font=font_small, fill="white")
-            draw.text((x_offset + 100, y_offset + 95), "Sup", font=font_small, fill=sup_color)
+            draw.text((x_offset + 0, y_offset + 92), "Container:", font=font_small, fill="white")
+            draw.text((x_offset + 65, y_offset + 92), "Hass", font=font_small, fill=ha_color)
+            draw.text((x_offset + 95, y_offset + 92), "/", font=font_small, fill="white")
+            draw.text((x_offset + 100, y_offset + 92), "Sup", font=font_small, fill=sup_color)
 
             # Animation
             draw_animation(draw, x_offset + 110 + animation_frame, y_offset + 110)
