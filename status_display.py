@@ -90,23 +90,24 @@ def display_status():
             temp_str = get_cpu_temperature()
             temp_val = float(temp_str.replace("°C", ""))
             temp_color = get_temp_color(temp_val)
-            draw.text((0, y_offset + 20), f"CPU Temp: {temp_str}", font=font_small, fill=temp_color)
+            draw.text((0, y_offset + 20), "CPU Temp: ", font=font_small, fill="white")
+            draw.text((80, y_offset + 20), f"{temp_str}", font=font_small, fill=temp_color)
 
             # RAM and Swap Usage (combined line)
             ram = psutil.virtual_memory()
             swap = psutil.swap_memory()
             ram_color = get_usage_color(ram.percent)
             swap_color = get_usage_color(swap.percent)
-            # RAM: {ram.percent}% / {swap.percent}%
-            draw.text((0, y_offset + 40), f"RAM: ", font=font_small, fill="white")
+            draw.text((0, y_offset + 40), "RAM: ", font=font_small, fill="white")
             draw.text((40, y_offset + 40), f"{ram.percent}%", font=font_small, fill=ram_color)
-            draw.text((70, y_offset + 40), f"/", font=font_small, fill="white")
-            draw.text((80, y_offset + 40), f"{swap.percent}%", font=font_small, fill=swap_color)
+            draw.text((73, y_offset + 40), "/", font=font_small, fill="white")
+            draw.text((83, y_offset + 40), f"{swap.percent}%", font=font_small, fill=swap_color)
 
             # CPU Usage
             cpu = psutil.cpu_percent()
             cpu_color = get_usage_color(cpu)
-            draw.text((0, y_offset + 60), f"CPU: {cpu}%", font=font_small, fill=cpu_color)
+            draw.text((0, y_offset + 60), "CPU: ", font=font_small, fill="white")
+            draw.text((40, y_offset + 60), f"{cpu}%", font=font_small, fill=cpu_color)
 
             # Docker Status - Home Assistant and Supervisor (1 line, color coded)
             ha_status = get_docker_status("homeassistant")
