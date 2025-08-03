@@ -12,7 +12,7 @@ docker_client = docker.from_env()
 
 # Initialize SPI interface and SSD1351 display
 serial = spi(port=0, device=0)
-display = ssd1351(serial)
+display = ssd1351(serial, rotate=1)
 
 # Load fonts
 font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
@@ -71,9 +71,13 @@ def display_status():
             swap = psutil.swap_memory()
             draw.text((0, 80), f"Swap: {swap.percent}%", font=font_small, fill="white")
 
-            # Docker Status
-            ha_status = get_docker_status("home-assistant")
+            # Docker Status - Home Assistant
+            ha_status = get_docker_status("homeassistant")
             draw.text((0, 100), f"HA: {ha_status}", font=font_small, fill="white")
+
+            # Docker Status - Supervisor
+            supervisor_status = get_docker_status("hassio_supervisor")
+            draw.text((0, 115), f"SUP: {supervisor_status}", font=font_small, fill="white")
 
             # Animation
             draw_animation(draw, 110 + animation_frame, 110)
