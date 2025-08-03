@@ -12,7 +12,7 @@ docker_client = docker.from_env()
 
 # Initialize SPI interface and SSD1351 display
 serial = spi(port=0, device=0)
-display = ssd1351(serial, rotate=3)
+display = ssd1351(serial, rotate=0)
 
 # Load fonts
 font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
