@@ -29,6 +29,8 @@ shift_y = 0
 shift_direction = 1
 shift_counter = 0
 
+YELLOW = (255, 255, 0)  # Pure yellow in RGB
+
 def get_uptime():
     """Get system uptime."""
     return str(timedelta(seconds=int(time.time() - psutil.boot_time())))
@@ -54,14 +56,14 @@ def get_status_color(status):
     elif status == "exited" or status == "stopped":
         return "red"
     else:
-        return "yellow"
+        return YELLOW
 
 def get_temp_color(temp):
     """Return color based on CPU temperature thresholds."""
     if temp < 60:
         return "green"
     elif temp < 70:
-        return "yellow"
+        return YELLOW
     else:
         return "red"
 
@@ -70,7 +72,7 @@ def get_usage_color(percent):
     if percent <= 60:
         return "green"
     elif percent < 80:
-        return "yellow"
+        return YELLOW
     else:
         return "red"
 
