@@ -60,7 +60,7 @@ def get_temp_color(temp):
 
 def get_usage_color(percent):
     """Return color based on usage thresholds (RAM, Swap, CPU)."""
-    if percent < 60:
+    if percent <= 60:
         return "green"
     elif percent < 80:
         return "yellow"
@@ -106,8 +106,8 @@ def display_status():
             swap_color = get_usage_color(swap.percent)
             draw.text((0, y_offset + 60), "RAM: ", font=font_small, fill="white")
             draw.text((40, y_offset + 60), f"{ram.percent}%", font=font_small, fill=ram_color)
-            draw.text((75, y_offset + 60), "/", font=font_small, fill="white")
-            draw.text((80, y_offset + 60), f"{swap.percent}%", font=font_small, fill=swap_color)
+            draw.text((80, y_offset + 60), "/", font=font_small, fill="white")
+            draw.text((87, y_offset + 60), f"{swap.percent}%", font=font_small, fill=swap_color)
 
             # Disk Usage (new line below RAM/Swap)
             disk = psutil.disk_usage("/")
