@@ -93,21 +93,27 @@ def display_status():
             draw.text((0, y_offset + 20), "CPU Temp: ", font=font_small, fill="white")
             draw.text((80, y_offset + 20), f"{temp_str}", font=font_small, fill=temp_color)
 
+            # CPU Usage
+            cpu = psutil.cpu_percent()
+            cpu_color = get_usage_color(cpu)
+            draw.text((0, y_offset + 40), "CPU: ", font=font_small, fill="white")
+            draw.text((40, y_offset + 40), f"{cpu}%", font=font_small, fill=cpu_color)
+
             # RAM and Swap Usage (combined line)
             ram = psutil.virtual_memory()
             swap = psutil.swap_memory()
             ram_color = get_usage_color(ram.percent)
             swap_color = get_usage_color(swap.percent)
-            draw.text((0, y_offset + 40), "RAM: ", font=font_small, fill="white")
-            draw.text((40, y_offset + 40), f"{ram.percent}%", font=font_small, fill=ram_color)
-            draw.text((73, y_offset + 40), "/", font=font_small, fill="white")
-            draw.text((83, y_offset + 40), f"{swap.percent}%", font=font_small, fill=swap_color)
+            draw.text((0, y_offset + 60), "RAM: ", font=font_small, fill="white")
+            draw.text((40, y_offset + 60), f"{ram.percent}%", font=font_small, fill=ram_color)
+            draw.text((75, y_offset + 60), "/", font=font_small, fill="white")
+            draw.text((80, y_offset + 60), f"{swap.percent}%", font=font_small, fill=swap_color)
 
-            # CPU Usage
-            cpu = psutil.cpu_percent()
-            cpu_color = get_usage_color(cpu)
-            draw.text((0, y_offset + 60), "CPU: ", font=font_small, fill="white")
-            draw.text((40, y_offset + 60), f"{cpu}%", font=font_small, fill=cpu_color)
+            # Disk Usage (new line below RAM/Swap)
+            disk = psutil.disk_usage("/")
+            disk_color = get_usage_color(disk.percent)
+            draw.text((0, y_offset + 75), "Disk: ", font=font_small, fill="white")
+            draw.text((40, y_offset + 75), f"{disk.percent}%", font=font_small, fill=disk_color)
 
             # Docker Status - Home Assistant and Supervisor (1 line, color coded)
             ha_status = get_docker_status("homeassistant")
@@ -115,10 +121,10 @@ def display_status():
             ha_color = get_status_color(ha_status)
             sup_color = get_status_color(supervisor_status)
             # Show service name in color, status in white
-            draw.text((0, y_offset + 80), "Container:", font=font_small, fill="white")
-            draw.text((65, y_offset + 80), "Hass", font=font_small, fill=ha_color)
-            draw.text((95, y_offset + 80), "/", font=font_small, fill="white")
-            draw.text((100, y_offset + 80), "Sup", font=font_small, fill=sup_color)
+            draw.text((0, y_offset + 95), "Container:", font=font_small, fill="white")
+            draw.text((65, y_offset + 95), "Hass", font=font_small, fill=ha_color)
+            draw.text((95, y_offset + 95), "/", font=font_small, fill="white")
+            draw.text((100, y_offset + 95), "Sup", font=font_small, fill=sup_color)
 
             # Animation
             draw_animation(draw, 110 + animation_frame, y_offset + 110)
