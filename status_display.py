@@ -157,7 +157,7 @@ def display_status():
             uptime_str = get_uptime()
             uptime_width = get_text_width(uptime_str, font_small)
             draw.text((x_offset + 0, y_offset + 0), "Uptime:", font=font_small, fill="white")
-            draw.text((x_offset + display.width - uptime_width-1, y_offset + 0), uptime_str, font=font_small, fill="white")
+            draw.text((x_offset + display.width - uptime_width - 2, y_offset + 0), uptime_str, font=font_small, fill="white")
 
             # CPU Usage + Temperature
             temp_str = get_cpu_temperature()
@@ -168,15 +168,11 @@ def display_status():
             cpu_width = get_text_width(cpu_str, font_small)
             temp_color = get_temp_color(temp_val)
             temp_width = get_text_width(temp_str, font_small)
-            right_x = x_offset + display.width-1 # Needed for CPU and RAM lines
+            right_x = x_offset + display.width - 2 # Needed for CPU and RAM lines
             slash_str = " / " # Needed for CPU and RAM lines
             slash_width = get_text_width(slash_str, font_small) # Needed for CPU and RAM lines
 
             draw.text((x_offset + 0, y_offset + 20), "CPU:", font=font_small, fill="white")
-            #draw.text((x_offset + display.width - cpu_width-1, y_offset + 40), cpu_str, font=font_small, fill=cpu_color)
-
-            #draw.text((x_offset + 0, y_offset + 20), "/", font=font_small, fill="white")
-            #draw.text((x_offset + display.width - temp_width-1, y_offset + 20), temp_str, font=font_small, fill=temp_color)
 
             draw.text((right_x - cpu_width - slash_width - temp_width, y_offset + 20), cpu_str, font=font_small, fill=cpu_color)
             draw.text((right_x - slash_width - temp_width, y_offset + 20), slash_str, font=font_small, fill="white")
@@ -207,7 +203,7 @@ def display_status():
             disk_str = f"{disk.percent}%"
             disk_width = get_text_width(disk_str, font_small)
             draw.text((x_offset + 0, y_offset + 60), "Disk:", font=font_small, fill="white")
-            draw.text((x_offset + display.width - disk_width-1, y_offset + 60), disk_str, font=font_small, fill=disk_color)
+            draw.text((x_offset + display.width - disk_width - 2, y_offset + 60), disk_str, font=font_small, fill=disk_color)
 
             # Docker Status - Home Assistant and Supervisor (right aligned)
             ha_status = get_docker_status("homeassistant")
