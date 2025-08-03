@@ -7,6 +7,7 @@ from luma.oled.device import ssd1351
 from luma.core.render import canvas
 from PIL import ImageFont
 import random
+import subprocess
 
 # Initialize Docker client
 docker_client = docker.from_env()
@@ -29,7 +30,14 @@ shift_y = 0
 shift_direction = 1
 shift_counter = 0
 
-YELLOW = (0, 255, 255)  # Pure yellow in RGB
+# Because my SSD1351 diplay uses BGR color format I need to define colors in BGR
+# These colors are defined in BGR format for compatibility with the SSD1351 display
+# YELLOW is defined as pure yellow in RGB, which is (255, 255, 0) in BGR it is (0, 255, 255)
+# RED is defined as pure red in RGB, which is (255, 0, 0) in BGR it is (0, 0, 255)
+# GREEN is defined as pure green in RGB, which is (0, 255, 0) in BGR it is (0, 255, 0)  
+YELLOW = (0, 255, 255)
+RED = (0, 0, 255)
+GREEN = (0, 255, 0)
 
 def get_uptime():
     """Get system uptime."""
@@ -52,29 +60,29 @@ def get_docker_status(container_name):
 def get_status_color(status):
     """Return color based on container status."""
     if status == "running":
-        return "green"
+        return  GREEN
     elif status == "exited" or status == "stopped":
-        return "red"
+        return  RED
     else:
         return YELLOW
 
 def get_temp_color(temp):
     """Return color based on CPU temperature thresholds."""
     if temp < 60:
-        return "green"
+        return GREEN
     elif temp < 70:
         return YELLOW
     else:
-        return "red"
+        return RED
 
 def get_usage_color(percent):
     """Return color based on usage thresholds (RAM, Swap, CPU)."""
     if percent <= 60:
-        return "green"
+        return GREEN
     elif percent < 80:
         return YELLOW
     else:
-        return "red"
+        return RED
 
 def draw_animation(draw, x, y):
     """Draw a small animation to indicate the script is running."""
@@ -107,6 +115,24 @@ def update_shift():
             shift_y -= 2
             if shift_y < -4:
                 shift_direction = 1
+
+def get_ping(host="www.google.com"):
+    """Return ping time to host in ms, or 'timeout' if unreachable."""
+    try:
+        # Use the system ping command, send 1 packet, wait max 1 second
+        output = subprocess.check_output(
+            ["ping", "-c", "1", "-W", "1", host],
+            stderr=subprocess.STDOUT,
+            universal_newlines=True
+        )
+        # Parse output for time=XX ms
+        for line in output.splitlines():
+            if "time=" in line:
+                time_ms = line.split("time=")[-1].split(" ")[0]
+                return f"{time_ms} ms"
+        return "timeout"
+    except Exception:
+        return "timeout"
 
 def display_status():
     """Update the display with system status."""
@@ -161,8 +187,12 @@ def display_status():
             draw.text((x_offset + 95, y_offset + 95), "/", font=font_small, fill="white")
             draw.text((x_offset + 100, y_offset + 95), "Sup", font=font_small, fill=sup_color)
 
-            # Animation
-            draw_animation(draw, x_offset + 110 + animation_frame, y_offset + 110)
+            # Animation (move to top right)
+            draw_animation(draw, x_offset + display.width - 10, y_offset)
+
+            # Ping to www.google.com (bottom line)
+            ping_result = get_ping()
+            draw.text((x_offset + 0, y_offset + 110), f"Ping: {ping_result}", font=font_small, fill="white")
 
         time.sleep(1)
 
