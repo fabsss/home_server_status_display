@@ -53,34 +53,34 @@ def display_status():
 
     while True:
         with canvas(display) as draw:
+            # Add 5 pixels headroom to the top for all lines
+            y_offset = 5
+
             # Uptime
-            draw.text((0, 0), f"Uptime: {get_uptime()}", font=font_small, fill="white")
+            draw.text((0, y_offset + 0), f"Uptime: {get_uptime()}", font=font_small, fill="white")
 
             # CPU Temperature
-            draw.text((0, 20), f"CPU Temp: {get_cpu_temperature()}", font=font_small, fill="white")
+            draw.text((0, y_offset + 20), f"CPU Temp: {get_cpu_temperature()}", font=font_small, fill="white")
 
-            # RAM Usage
+            # RAM and Swap Usage (combined line)
             ram = psutil.virtual_memory()
-            draw.text((0, 40), f"RAM: {ram.percent}%", font=font_small, fill="white")
+            swap = psutil.swap_memory()
+            draw.text((0, y_offset + 40), f"RAM: {ram.percent}%  SWAP: {swap.percent}%", font=font_small, fill="white")
 
             # CPU Usage
             cpu = psutil.cpu_percent()
-            draw.text((0, 60), f"CPU: {cpu}%", font=font_small, fill="white")
-
-            # Swap Usage
-            swap = psutil.swap_memory()
-            draw.text((0, 80), f"Swap: {swap.percent}%", font=font_small, fill="white")
+            draw.text((0, y_offset + 60), f"CPU: {cpu}%", font=font_small, fill="white")
 
             # Docker Status - Home Assistant
             ha_status = get_docker_status("homeassistant")
-            draw.text((0, 100), f"HA: {ha_status}", font=font_small, fill="white")
+            draw.text((0, y_offset + 80), f"HA: {ha_status}", font=font_small, fill="white")
 
             # Docker Status - Supervisor
             supervisor_status = get_docker_status("hassio_supervisor")
-            draw.text((0, 115), f"SUP: {supervisor_status}", font=font_small, fill="white")
+            draw.text((0, y_offset + 95), f"SUP: {supervisor_status}", font=font_small, fill="white")
 
             # Animation
-            draw_animation(draw, 110 + animation_frame, 110)
+            draw_animation(draw, 110 + animation_frame, y_offset + 110)
 
         time.sleep(1)
 
