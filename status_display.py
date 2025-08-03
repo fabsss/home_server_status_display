@@ -7,6 +7,7 @@ from luma.oled.device import ssd1351
 from luma.core.render import canvas
 from PIL import ImageFont
 import random
+import subprocess
 
 # Initialize Docker client
 docker_client = docker.from_env()
@@ -115,6 +116,24 @@ def update_shift():
             if shift_y < -4:
                 shift_direction = 1
 
+def get_ping(host="www.google.com"):
+    """Return ping time to host in ms, or 'timeout' if unreachable."""
+    try:
+        # Use the system ping command, send 1 packet, wait max 1 second
+        output = subprocess.check_output(
+            ["ping", "-c", "1", "-W", "1", host],
+            stderr=subprocess.STDOUT,
+            universal_newlines=True
+        )
+        # Parse output for time=XX ms
+        for line in output.splitlines():
+            if "time=" in line:
+                time_ms = line.split("time=")[-1].split(" ")[0]
+                return f"{time_ms} ms"
+        return "timeout"
+    except Exception:
+        return "timeout"
+
 def display_status():
     """Update the display with system status."""
     global animation_frame, shift_x, shift_y
@@ -188,32 +207,17 @@ def display_status():
             supervisor_status = get_docker_status("hassio_supervisor")
             ha_color = get_status_color(ha_status)
             sup_color = get_status_color(supervisor_status)
-            ha_str = "Hass"
-            sup_str = "Sup"
-            status_str = f"{ha_str}: {ha_status} / {sup_str}: {supervisor_status}"
-            status_width = get_text_width(status_str, font_small)
             draw.text((x_offset + 0, y_offset + 95), "Container:", font=font_small, fill="white")
-            right_x = x_offset + display.width
-            ha_name = f"{ha_str}: "
-            ha_name_width = get_text_width(ha_name, font_small)
-            ha_status_width = get_text_width(ha_status, font_small)
-            slash_width = get_text_width(" / ", font_small)
-            sup_name = f"{sup_str}: "
-            sup_name_width = get_text_width(sup_name, font_small)
-            sup_status_width = get_text_width(supervisor_status, font_small)
-            x_pos = right_x - (ha_name_width + ha_status_width + slash_width + sup_name_width + sup_status_width)
-            draw.text((x_pos, y_offset + 95), ha_name, font=font_small, fill=ha_color)
-            x_pos += ha_name_width
-            draw.text((x_pos, y_offset + 95), ha_status, font=font_small, fill="white")
-            x_pos += ha_status_width
-            draw.text((x_pos, y_offset + 95), " / ", font=font_small, fill="white")
-            x_pos += slash_width
-            draw.text((x_pos, y_offset + 95), sup_name, font=font_small, fill=sup_color)
-            x_pos += sup_name_width
-            draw.text((x_pos, y_offset + 95), supervisor_status, font=font_small, fill="white")
+            draw.text((x_offset + 65, y_offset + 95), "Hass", font=font_small, fill=ha_color)
+            draw.text((x_offset + 95, y_offset + 95), "/", font=font_small, fill="white")
+            draw.text((x_offset + 100, y_offset + 95), "Sup", font=font_small, fill=sup_color)
 
             # Animation
             draw_animation(draw, x_offset + display.width - 10, y_offset)
+
+            # Ping to www.google.com (bottom line)
+            ping_result = get_ping()
+            draw.text((x_offset + 0, y_offset + 110), f"Ping: {ping_result}", font=font_small, fill="white")
 
         time.sleep(1)
 
