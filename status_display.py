@@ -29,7 +29,7 @@ shift_y = 0
 shift_direction = 1
 shift_counter = 0
 
-YELLOW = (255, 0, 0)  # Pure yellow in RGB
+YELLOW = (0, 255, 0)  # Pure yellow in RGB
 
 def get_uptime():
     """Get system uptime."""
