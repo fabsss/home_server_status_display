@@ -6,6 +6,7 @@ from luma.core.interface.serial import spi
 from luma.oled.device import ssd1351
 from luma.core.render import canvas
 from PIL import ImageFont
+import random
 
 # Initialize Docker client
 docker_client = docker.from_env()
@@ -21,6 +22,12 @@ font_small = ImageFont.truetype(font_path, 12)
 
 # Animation state
 animation_frame = 0
+
+# Add these global variables at the top of your script
+shift_x = 0
+shift_y = 0
+shift_direction = 1
+shift_counter = 0
 
 def get_uptime():
     """Get system uptime."""
@@ -74,60 +81,86 @@ def draw_animation(draw, x, y):
     draw.rectangle((x, y, x + size, y + size), outline="white", fill="white")
     animation_frame = (animation_frame + 1) % 10
 
+def update_shift():
+    """Update the pixel shift offset to prevent OLED burn-in."""
+    global shift_x, shift_y, shift_direction, shift_counter
+    # Change shift every 60 cycles (~1 minute if sleep is 1s)
+    shift_counter += 1
+    if shift_counter >= 60:
+        shift_counter = 0
+        # Cycle through 4 directions: right, down, left, up
+        if shift_direction == 1:
+            shift_x += 2
+            if shift_x > 4:
+                shift_direction = 2
+        elif shift_direction == 2:
+            shift_y += 2
+            if shift_y > 4:
+                shift_direction = 3
+        elif shift_direction == 3:
+            shift_x -= 2
+            if shift_x < -4:
+                shift_direction = 4
+        elif shift_direction == 4:
+            shift_y -= 2
+            if shift_y < -4:
+                shift_direction = 1
+
 def display_status():
     """Update the display with system status."""
-    global animation_frame
+    global animation_frame, shift_x, shift_y
 
     while True:
+        update_shift()
         with canvas(display) as draw:
             # Add 5 pixels headroom to the top for all lines
-            y_offset = 5
+            y_offset = 5 + shift_y
+            x_offset = shift_x
 
             # Uptime
-            draw.text((0, y_offset + 0), f"Uptime: {get_uptime()}", font=font_small, fill="white")
+            draw.text((x_offset + 0, y_offset + 0), f"Uptime: {get_uptime()}", font=font_small, fill="white")
 
             # CPU Temperature
             temp_str = get_cpu_temperature()
             temp_val = float(temp_str.replace("°C", ""))
             temp_color = get_temp_color(temp_val)
-            draw.text((0, y_offset + 20), "CPU Temp: ", font=font_small, fill="white")
-            draw.text((80, y_offset + 20), f"{temp_str}", font=font_small, fill=temp_color)
+            draw.text((x_offset + 0, y_offset + 20), "CPU Temp: ", font=font_small, fill="white")
+            draw.text((x_offset + 80, y_offset + 20), f"{temp_str}", font=font_small, fill=temp_color)
 
             # CPU Usage
             cpu = psutil.cpu_percent()
             cpu_color = get_usage_color(cpu)
-            draw.text((0, y_offset + 40), "CPU: ", font=font_small, fill="white")
-            draw.text((40, y_offset + 40), f"{cpu}%", font=font_small, fill=cpu_color)
+            draw.text((x_offset + 0, y_offset + 40), "CPU: ", font=font_small, fill="white")
+            draw.text((x_offset + 40, y_offset + 40), f"{cpu}%", font=font_small, fill=cpu_color)
 
             # RAM and Swap Usage (combined line)
             ram = psutil.virtual_memory()
             swap = psutil.swap_memory()
             ram_color = get_usage_color(ram.percent)
             swap_color = get_usage_color(swap.percent)
-            draw.text((0, y_offset + 60), "RAM: ", font=font_small, fill="white")
-            draw.text((40, y_offset + 60), f"{ram.percent}%", font=font_small, fill=ram_color)
-            draw.text((80, y_offset + 60), "/", font=font_small, fill="white")
-            draw.text((87, y_offset + 60), f"{swap.percent}%", font=font_small, fill=swap_color)
+            draw.text((x_offset + 0, y_offset + 60), "RAM: ", font=font_small, fill="white")
+            draw.text((x_offset + 40, y_offset + 60), f"{ram.percent}%", font=font_small, fill=ram_color)
+            draw.text((x_offset + 80, y_offset + 60), "/", font=font_small, fill="white")
+            draw.text((x_offset + 87, y_offset + 60), f"{swap.percent}%", font=font_small, fill=swap_color)
 
-            # Disk Usage (new line below RAM/Swap)
+            # Disk Usage
             disk = psutil.disk_usage("/")
             disk_color = get_usage_color(disk.percent)
-            draw.text((0, y_offset + 75), "Disk: ", font=font_small, fill="white")
-            draw.text((40, y_offset + 75), f"{disk.percent}%", font=font_small, fill=disk_color)
+            draw.text((x_offset + 0, y_offset + 80), "Disk: ", font=font_small, fill="white")
+            draw.text((x_offset + 40, y_offset + 80), f"{disk.percent}%", font=font_small, fill=disk_color)
 
             # Docker Status - Home Assistant and Supervisor (1 line, color coded)
             ha_status = get_docker_status("homeassistant")
             supervisor_status = get_docker_status("hassio_supervisor")
             ha_color = get_status_color(ha_status)
             sup_color = get_status_color(supervisor_status)
-            # Show service name in color, status in white
-            draw.text((0, y_offset + 95), "Container:", font=font_small, fill="white")
-            draw.text((65, y_offset + 95), "Hass", font=font_small, fill=ha_color)
-            draw.text((95, y_offset + 95), "/", font=font_small, fill="white")
-            draw.text((100, y_offset + 95), "Sup", font=font_small, fill=sup_color)
+            draw.text((x_offset + 0, y_offset + 95), "Container:", font=font_small, fill="white")
+            draw.text((x_offset + 65, y_offset + 95), "Hass", font=font_small, fill=ha_color)
+            draw.text((x_offset + 95, y_offset + 95), "/", font=font_small, fill="white")
+            draw.text((x_offset + 100, y_offset + 95), "Sup", font=font_small, fill=sup_color)
 
             # Animation
-            draw_animation(draw, 110 + animation_frame, y_offset + 110)
+            draw_animation(draw, x_offset + 110 + animation_frame, y_offset + 110)
 
         time.sleep(1)
 
