@@ -8,6 +8,9 @@ from luma.core.render import canvas
 from PIL import ImageFont
 import random
 import subprocess
+import os
+import signal
+import sys
 
 # =========================
 # Parameter for Nightmode
@@ -158,6 +161,41 @@ def apply_nightmode():
             display.contrast(NIGHT_CONTRAST)
         else:
             display.contrast(DAY_CONTRAST)
+
+def handle_shutdown(signum, frame):
+    """
+    Signal handler for shutdown/reboot events.
+    Triggered when OS sends SIGTERM (shutdown/reboot) or SIGINT (Ctrl+C).
+    """
+    global shutdown_detected
+    shutdown_detected = True
+    show_shutdown_screen()
+    sys.exit(0)
+
+def show_shutdown_screen():
+    """
+    Display a full red screen with the text 'Shutdown Host System' centered.
+    """
+    with canvas(display) as draw:
+        # Fill full screen with red
+        draw.rectangle((0, 0, display.width, display.height), fill=RED)
+
+        # Centered white text
+        text = "Shutdown Host System"
+        font = font_large
+        bbox = font.getbbox(text)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        x = (display.width - text_width) // 2
+        y = (display.height - text_height) // 2
+        draw.text((x, y), text, font=font, fill="white")
+
+    # Keep visible for a few seconds until Pi powers off
+    time.sleep(5)
+
+# Attach signal handlers for shutdown/reboot
+signal.signal(signal.SIGTERM, handle_shutdown)
+signal.signal(signal.SIGINT, handle_shutdown)
 
 def display_status():
     """Update the display with system status."""
