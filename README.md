@@ -1,44 +1,47 @@
 # Home Server Status Display
 
-This project displays live system and Docker container status information on an **SSD1351 OLED display** connected to a Raspberry Pi.
+This project displays status information of your Raspberry Pi Home Server on an **SSD1351 OLED display**.  
+The following information is shown:
 
-It shows:
-- System uptime
-- CPU usage & temperature
-- RAM & Swap usage
-- Disk usage
-- Docker container status for:
-  - Home Assistant (`homeassistant`)
-  - Supervisor (`hassio_supervisor`)
-- Network ping to Google
-- Small pixel-shift animation to prevent OLED burn-in
-- Night mode (automatic brightness reduction during configured hours)
-- Graceful **shutdown screen** when the Raspberry Pi is powering off
+- **System uptime**
+- **CPU usage & temperature** (with color-coded warning levels)
+- **RAM and swap usage**
+- **Disk usage**
+- **Docker container status** (e.g., Home Assistant, Supervisor)
+- **Ping time to www.google.com**
+- **Pixel shifting** to prevent OLED burn-in
+- **Automatic night mode** with reduced brightness
+- **Shutdown screen** when the system is powering off
+
+The display is controlled via **SPI**.
 
 ---
 
 ## Hardware Requirements
 
-- Raspberry Pi (any model with SPI support)
-- SSD1351 OLED display (SPI interface, 128×128 pixels)
-- Connected according to the `luma.oled` SPI pin configuration
+- Raspberry Pi (tested with Raspberry Pi 4)
+- OLED display **SSD1351** (128x128, SPI)
+- Wiring (GPIO for SPI, Data/Command, Reset)
 
----
+**Default wiring** (configurable in `status_display.py`):
 
-## Software Requirements
-
-The script uses:
-- Python 3
-- `luma.oled` for display control
-- `psutil` for system stats
-- `docker` Python SDK
-- `Pillow` for text rendering
+| Signal         | GPIO Pin  |
+|----------------|-----------|
+| VCC            | 3.3V      |
+| GND            | GND       |
+| SCK (CLK)      | GPIO 11   |
+| MOSI           | GPIO 10   |
+| CS             | GPIO 8    |
+| DC             | GPIO 24   |
+| RST            | GPIO 25   |
 
 ---
 
 ## Installation
 
-1. **Clone this repository**
+The project includes an **automatic installation script** that handles everything:
+
+1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/home_server_status_display.git
+   git clone https://github.com/<YOUR_USERNAME>/home_server_status_display.git
    cd home_server_status_display
