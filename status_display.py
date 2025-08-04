@@ -12,10 +12,10 @@ import subprocess
 # =========================
 # Parameter for Nightmode
 # =========================
-NIGHTMODE_START = 22   # 22:00
-NIGHTMODE_END   = 6    # 6:00
+NIGHTMODE_START = 23   # Time to start night mode (e.g., 22:00)
+NIGHTMODE_END   = 6    # Time to end night mode (e.g., 6:00)
 NIGHT_CONTRAST  = 50   # 0..255 (Brightness/Contrast at night)
-DAY_CONTRAST    = 50  # 0..255 (Full brightness/contrast during the day)
+DAY_CONTRAST    = 200  # 0..255 (Full brightness/contrast during the day)
 # =========================
 
 # Initialize Docker client
