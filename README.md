@@ -45,3 +45,20 @@ The project includes an **automatic installation script** that handles everythin
    ```bash
    git clone https://github.com/<YOUR_USERNAME>/home_server_status_display.git
    cd home_server_status_display
+2. **Install via bash script**:
+   ```bash
+   chmod +x install.sh
+   ./install.sh
+
+
+**What the Script does:**
+What the installation script does:
+1. Enable SPI interface in /boot/config.txt and via raspi-config
+2. Update system packages
+3. Install required dependencies:
+   - Python 3 + venv + dev headers
+   - luma.oled dependencies
+4. Create Python virtual environment and install Python dependencies:
+   - psutil, docker, pillow, luma.oled
+5. Create a systemd service to run the script automatically at boot
+6. Enable & start the service
