@@ -37,6 +37,18 @@ The display is controlled via **SPI**.
 
 ---
 
+## Configuration
+
+*Night mode parameters can be changed at the top of status_display.py:
+
+```
+NIGHTMODE_START = 23   # Start hour (23 = 11 PM)
+NIGHTMODE_END   = 6    # End hour (6 = 6 AM)
+NIGHT_CONTRAST  = 50   # Brightness/contrast at night (0..255)
+DAY_CONTRAST    = 200  # Brightness/contrast during the day (0..255)
+```
+
+---
 ## Installation
 
 The project includes an **automatic installation script** that handles everything:
