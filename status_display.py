@@ -180,18 +180,30 @@ def show_shutdown_screen():
         # Fill full screen with red
         draw.rectangle((0, 0, display.width, display.height), fill=RED)
 
-        # Centered white text
-        text = "Shutdown Host System"
+        # Lines of text
+        lines = ["Shutdown", "Host", "System"]
         font = font_large
-        bbox = font.getbbox(text)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
-        x = (display.width - text_width) // 2
-        y = (display.height - text_height) // 2
-        draw.text((x, y), text, font=font, fill="white")
 
-    # Keep visible for a few seconds until Pi powers off
-    time.sleep(5)
+        # Calculate total height of all lines (including spacing)
+        line_heights = [font.getbbox(line)[3] - font.getbbox(line)[1] for line in lines]
+        total_height = sum(line_heights) + (len(lines) - 1) * 4  # 4 px spacing between lines
+
+        # Starting y position to center vertically
+        y = (display.height - total_height) // 2
+
+        for line in lines:
+            bbox = font.getbbox(line)
+            text_width = bbox[2] - bbox[0]
+            x = (display.width - text_width) // 2  # Center horizontally
+            draw.text((x, y), line, font=font, fill="white")
+            y += (bbox[3] - bbox[1]) + 4  # Move down for next line
+
+    # Keep showing the message until the Pi shuts down
+    try:
+        while True:
+            time.sleep(1)  # Wait forever until the system powers off
+    except KeyboardInterrupt:
+        pass
 
 # Attach signal handlers for shutdown/reboot
 signal.signal(signal.SIGTERM, handle_shutdown)
