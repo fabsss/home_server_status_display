@@ -1,13 +1,22 @@
 import time
 import psutil
 import docker
-from datetime import timedelta
+from datetime import timedelta, datetime
 from luma.core.interface.serial import spi
 from luma.oled.device import ssd1351
 from luma.core.render import canvas
 from PIL import ImageFont
 import random
 import subprocess
+
+# =========================
+# Parameter for Nightmode
+# =========================
+NIGHTMODE_START = 22   # 22:00
+NIGHTMODE_END   = 6    # 6:00
+NIGHT_CONTRAST  = 50   # 0..255 (Brightness/Contrast at night)
+DAY_CONTRAST    = 50  # 0..255 (Full brightness/contrast during the day)
+# =========================
 
 # Initialize Docker client
 docker_client = docker.from_env()
@@ -133,12 +142,29 @@ def get_ping(host="www.google.com"):
         return "timeout"
     except Exception:
         return "timeout"
+    
+def apply_nightmode():
+    """Changes the display contrast based on the current time."""
+    now_hour = datetime.now().hour
+    if NIGHTMODE_START > NIGHTMODE_END:
+        # Night mode spans midnight (e.g., 22–6)
+        if now_hour >= NIGHTMODE_START or now_hour < NIGHTMODE_END:
+            display.contrast(NIGHT_CONTRAST)
+        else:
+            display.contrast(DAY_CONTRAST)
+    else:
+        # Nacht liegt innerhalb eines Tages (z.B. 1–5)
+        if NIGHTMODE_START <= now_hour < NIGHTMODE_END:
+            display.contrast(NIGHT_CONTRAST)
+        else:
+            display.contrast(DAY_CONTRAST)
 
 def display_status():
     """Update the display with system status."""
     global animation_frame, shift_x, shift_y
 
     while True:
+        apply_nightmode()
         update_shift()
         with canvas(display) as draw:
             # Add 5 pixels headroom to the top for all lines
