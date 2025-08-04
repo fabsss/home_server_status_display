@@ -34,7 +34,6 @@ sudo apt-get install -y \
     libopenjp2-7 \
     libtiff5 \
     git \
-    docker.io \
     fonts-dejavu-core
 
 # 4. Create Python virtual environment and install dependencies
