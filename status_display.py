@@ -164,13 +164,18 @@ def apply_nightmode():
 
 def handle_shutdown(signum, frame):
     """
-    Signal handler for shutdown/reboot events.
-    Triggered when OS sends SIGTERM (shutdown/reboot) or SIGINT (Ctrl+C).
+    Handle SIGTERM or SIGINT from systemd.
+    Only show shutdown screen if it's a real system shutdown/reboot.
     """
-    global shutdown_detected
-    shutdown_detected = True
-    show_shutdown_screen()
-    sys.exit(0)
+    global shutdown_triggered
+
+    # Check if system is actually shutting down (systemd creates /run/systemd/shutdown)
+    if os.path.exists("/run/systemd/shutdown"):
+        shutdown_triggered = True
+        show_shutdown_screen()
+    else:
+        # Not a real shutdown → just exit normally
+        sys.exit(0)
 
 def show_shutdown_screen():
     """
@@ -198,12 +203,9 @@ def show_shutdown_screen():
             draw.text((x, y), line, font=font, fill="white")
             y += (bbox[3] - bbox[1]) + 4  # Move down for next line
 
-    # Keep showing the message until the Pi shuts down
-    try:
-        while True:
-            time.sleep(1)  # Wait forever until the system powers off
-    except KeyboardInterrupt:
-        pass
+    # Only block if real shutdown
+    while os.path.exists("/run/systemd/shutdown"):
+        time.sleep(1)
 
 # Attach signal handlers for shutdown/reboot
 signal.signal(signal.SIGTERM, handle_shutdown)
