@@ -6,7 +6,6 @@ from luma.core.interface.serial import spi
 from luma.oled.device import ssd1351
 from luma.core.render import canvas
 from PIL import ImageFont
-import random
 import subprocess
 import os
 import signal
@@ -33,27 +32,36 @@ font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 font_large = ImageFont.truetype(font_path, 16)
 font_small = ImageFont.truetype(font_path, 12)
 
-# Animation state
+# Animation & Burn-in shift state
 animation_frame = 0
-
-# Add these global variables at the top of your script
 shift_x = 0
 shift_y = 0
 shift_direction = 1
 shift_counter = 0
 
+# Colors in BGR format (SSD1351 uses BGR)
 # Because my SSD1351 diplay uses BGR color format I need to define colors in BGR
 # These colors are defined in BGR format for compatibility with the SSD1351 display
 # YELLOW is defined as pure yellow in RGB, which is (255, 255, 0) in BGR it is (0, 255, 255)
 # RED is defined as pure red in RGB, which is (255, 0, 0) in BGR it is (0, 0, 255)
-# GREEN is defined as pure green in RGB, which is (0, 255, 0) in BGR it is (0, 255, 0)  
+# GREEN is defined as pure green in RGB, which is (0, 255, 0) in BGR it is (0, 255, 0)
+
 YELLOW = (0, 255, 255)
 RED = (0, 0, 255)
 GREEN = (0, 255, 0)
 
+# Control flags
+running = True
+shutdown_triggered = False
+
+
+# =========================
+# Helper Functions
+# =========================
 def get_pretty_uptime():
+    """Return uptime in a compact format: 'Xd HH:MMh' or 'HH:MMh'."""
     seconds = int(time.time() - psutil.boot_time())
-    days, remainder = divmod(seconds, 86400)  # 86400 Sekunden pro Tag
+    days, remainder = divmod(seconds, 86400)
     hours, remainder = divmod(remainder, 3600)
     minutes, _ = divmod(remainder, 60)
 
@@ -62,31 +70,35 @@ def get_pretty_uptime():
     else:
         return f"{hours:02d}:{minutes:02d}h"
 
+
 def get_cpu_temperature():
-    """Get CPU temperature."""
+    """Get CPU temperature in °C."""
     with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
         temp = int(f.read()) / 1000.0
     return f"{temp:.1f}°C"
 
+
 def get_docker_status(container_name):
-    """Get the status of a Docker container."""
+    """Get status of a Docker container."""
     try:
         container = docker_client.containers.get(container_name)
         return container.status
     except docker.errors.NotFound:
         return "Not Found"
 
+
 def get_status_color(status):
     """Return color based on container status."""
     if status == "running":
-        return  GREEN
-    elif status == "exited" or status == "stopped":
-        return  RED
+        return GREEN
+    elif status in ("exited", "stopped"):
+        return RED
     else:
         return YELLOW
 
+
 def get_temp_color(temp):
-    """Return color based on CPU temperature thresholds."""
+    """Return color based on CPU temperature."""
     if temp < 60:
         return GREEN
     elif temp < 70:
@@ -94,8 +106,9 @@ def get_temp_color(temp):
     else:
         return RED
 
+
 def get_usage_color(percent):
-    """Return color based on usage thresholds (RAM, Swap, CPU)."""
+    """Return color based on usage thresholds."""
     if percent <= 60:
         return GREEN
     elif percent < 80:
@@ -103,15 +116,17 @@ def get_usage_color(percent):
     else:
         return RED
 
+
 def draw_animation(draw, x, y):
-    """Draw a small animation to indicate the script is running."""
+    """Draw a small animation square."""
     global animation_frame
     size = 5
     draw.rectangle((x, y, x + size, y + size), outline="white", fill="white")
     animation_frame = (animation_frame + 1) % 10
 
+
 def update_shift():
-    """Update the pixel shift offset to prevent OLED burn-in."""
+    """Shift text to avoid OLED burn-in."""
     global shift_x, shift_y, shift_direction, shift_counter
     # Change shift every 60 cycles (~1 minute if sleep is 1s)
     shift_counter += 1
@@ -128,23 +143,22 @@ def update_shift():
                 shift_direction = 3
         elif shift_direction == 3:
             shift_x -= 2
-            if shift_x < 0:  # Reset to 0 to avoid negative shift
+            if shift_x < 0: # Reset to 0 to avoid negative shift
                 shift_direction = 4
         elif shift_direction == 4:
             shift_y -= 2
             if shift_y < -4:
                 shift_direction = 1
 
+
 def get_ping(host="www.google.com"):
-    """Return ping time to host in ms, or 'timeout' if unreachable."""
+    """Ping a host and return time in ms or 'timeout'."""
     try:
-        # Use the system ping command, send 1 packet, wait max 1 second
         output = subprocess.check_output(
             ["ping", "-c", "1", "-W", "1", host],
             stderr=subprocess.STDOUT,
             universal_newlines=True
         )
-        # Parse output for time=XX ms
         for line in output.splitlines():
             if "time=" in line:
                 time_ms = line.split("time=")[-1].split(" ")[0]
@@ -152,85 +166,69 @@ def get_ping(host="www.google.com"):
         return "timeout"
     except Exception:
         return "timeout"
-    
+
+
 def apply_nightmode():
-    """Changes the display contrast based on the current time."""
+    """Adjust display brightness depending on time."""
     now_hour = datetime.now().hour
     if NIGHTMODE_START > NIGHTMODE_END:
-        # Night mode spans midnight (e.g., 22–6)
         if now_hour >= NIGHTMODE_START or now_hour < NIGHTMODE_END:
             display.contrast(NIGHT_CONTRAST)
         else:
             display.contrast(DAY_CONTRAST)
     else:
-        # Nacht liegt innerhalb eines Tages (z.B. 1–5)
         if NIGHTMODE_START <= now_hour < NIGHTMODE_END:
             display.contrast(NIGHT_CONTRAST)
         else:
             display.contrast(DAY_CONTRAST)
 
-def handle_shutdown(signum, frame):
-    """
-    Handle SIGTERM or SIGINT from systemd.
-    Only show shutdown screen if it's a real system shutdown/reboot.
-    """
-    global shutdown_triggered
 
-    # Check if system is actually shutting down (systemd creates /run/systemd/shutdown)
+# =========================
+# Shutdown Handling
+# =========================
+def handle_shutdown(signum, frame):
+    """Catch SIGTERM/SIGINT and decide action."""
+    global running, shutdown_triggered
     if os.path.exists("/run/systemd/shutdown"):
         shutdown_triggered = True
         show_shutdown_screen()
     else:
-        # Not a real shutdown → just exit normally
-        sys.exit(0)
+        running = False  # Service stop → exit loop
+
 
 def show_shutdown_screen():
-    """
-    Display a full red screen with the text 'Shutdown Host System' centered.
-    """
+    """Display a red shutdown screen until the system powers off."""
     with canvas(display) as draw:
-        # Fill full screen with red
         draw.rectangle((0, 0, display.width, display.height), fill=RED)
-
-        # Lines of text
         lines = ["Shutdown", "Host", "System"]
         font = font_large
-
-        # Calculate total height of all lines (including spacing)
         line_heights = [font.getbbox(line)[3] - font.getbbox(line)[1] for line in lines]
-        total_height = sum(line_heights) + (len(lines) - 1) * 4  # 4 px spacing between lines
-
-        # Starting y position to center vertically
+        total_height = sum(line_heights) + (len(lines) - 1) * 4
         y = (display.height - total_height) // 2
-
         for line in lines:
             bbox = font.getbbox(line)
             text_width = bbox[2] - bbox[0]
-            x = (display.width - text_width) // 2  # Center horizontally
+            x = (display.width - text_width) // 2
             draw.text((x, y), line, font=font, fill="white")
-            y += (bbox[3] - bbox[1]) + 4  # Move down for next line
+            y += (bbox[3] - bbox[1]) + 4
 
-    # Only block if real shutdown
     while os.path.exists("/run/systemd/shutdown"):
-        time.sleep(1)
+        time.sleep(0.5)
 
-# Attach signal handlers for shutdown/reboot
-signal.signal(signal.SIGTERM, handle_shutdown)
-signal.signal(signal.SIGINT, handle_shutdown)
 
+# =========================
+# Main Display Loop
+# =========================
 def display_status():
-    """Update the display with system status."""
-    global animation_frame, shift_x, shift_y
-
-    while True:
+    """Main loop to update OLED display."""
+    global running
+    while running:
         apply_nightmode()
         update_shift()
         with canvas(display) as draw:
-            # Add 5 pixels headroom to the top for all lines
             y_offset = 5 + shift_y
             x_offset = shift_x
 
-            # Helper for text width (Pillow >=10)
             def get_text_width(text, font):
                 try:
                     bbox = font.getbbox(text)
@@ -241,8 +239,8 @@ def display_status():
             # Uptime
             uptime_str = get_pretty_uptime()
             uptime_width = get_text_width(uptime_str, font_small)
-            draw.text((x_offset + 0, y_offset + 0), "Uptime:", font=font_small, fill="white")
-            draw.text((x_offset + display.width - uptime_width - 6, y_offset + 0), uptime_str, font=font_small, fill="white")
+            draw.text((x_offset, y_offset), "Uptime:", font=font_small, fill="white")
+            draw.text((x_offset + display.width - uptime_width - 6, y_offset), uptime_str, font=font_small, fill="white")
 
             # CPU Usage + Temperature
             temp_str = get_cpu_temperature()
@@ -309,5 +307,11 @@ def display_status():
 
         time.sleep(1)
 
+
+# =========================
+# Main entry point
+# =========================
 if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, handle_shutdown)
+    signal.signal(signal.SIGINT, handle_shutdown)
     display_status()
