@@ -187,13 +187,11 @@ def apply_nightmode():
 # Shutdown Handling
 # =========================
 def handle_shutdown(signum, frame):
-    """Catch SIGTERM/SIGINT and decide action."""
-    global running, shutdown_triggered
-    if os.path.exists("/run/systemd/shutdown"):
-        shutdown_triggered = True
+    # Prüfen ob es ein echter Shutdown ist
+    if signum == signal.SIGTERM and os.path.exists("/run/systemd/shutdown"):
         show_shutdown_screen()
     else:
-        running = False  # Service stop → exit loop
+        sys.exit(0)
 
 
 def show_shutdown_screen():
