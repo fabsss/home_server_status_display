@@ -51,9 +51,16 @@ YELLOW = (0, 255, 255)
 RED = (0, 0, 255)
 GREEN = (0, 255, 0)
 
-def get_uptime():
-    """Get system uptime."""
-    return str(timedelta(seconds=int(time.time() - psutil.boot_time())))
+def get_pretty_uptime():
+    seconds = int(time.time() - psutil.boot_time())
+    days, remainder = divmod(seconds, 86400)  # 86400 Sekunden pro Tag
+    hours, remainder = divmod(remainder, 3600)
+    minutes, _ = divmod(remainder, 60)
+
+    if days > 0:
+        return f"{days}d {hours:02d}:{minutes:02d}h"
+    else:
+        return f"{hours:02d}:{minutes:02d}h"
 
 def get_cpu_temperature():
     """Get CPU temperature."""
@@ -232,7 +239,7 @@ def display_status():
                     return font.getsize(text)[0]
 
             # Uptime
-            uptime_str = get_uptime()
+            uptime_str = get_pretty_uptime()
             uptime_width = get_text_width(uptime_str, font_small)
             draw.text((x_offset + 0, y_offset + 0), "Uptime:", font=font_small, fill="white")
             draw.text((x_offset + display.width - uptime_width - 6, y_offset + 0), uptime_str, font=font_small, fill="white")
